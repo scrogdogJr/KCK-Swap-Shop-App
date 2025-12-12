@@ -1,41 +1,39 @@
 from typing import Optional
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
-
-
-# Shared properties
-class UserBase(BaseModel):
-    email: Optional[EmailStr] = None
-    username: Optional[str] = None
-    is_active: Optional[bool] = True
-    is_superuser: bool = False
+from app.models.parish import Parish
 
 
 # Properties to receive via API on creation
-class UserCreate(UserBase):
+class UserCreate(BaseModel):
     email: EmailStr
     username: str
     password: str
+    phone: str
+    parish: Parish
+    admin: bool
 
 
 # Properties to receive via API on update
-class UserUpdate(UserBase):
+class UserUpdate(BaseModel):
     password: Optional[str] = None
+
+class UserOut(BaseModel):
+    id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
 # Properties shared by models stored in DB
-class UserInDBBase(UserBase):
+class UserInDBBase(BaseModel):
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True
-
-
-# Additional properties to return via API
-class User(UserInDBBase):
-    pass
 
 
 # Additional properties stored in DB

@@ -1,6 +1,95 @@
-# FastAPI JWT Auth Boilerplate
+# KCK Swap Shop - Backend
 
-A FastAPI application boilerplate with JWT authentication structure and PostgreSQL database using SQLAlchemy.
+FastAPI backend with JWT authentication and SQLAlchemy ORM.
+
+## Prerequisites
+
+- Python 3.13+
+- pip (Python package manager)
+
+## Quick Start
+
+### 1. Clone the Repository
+
+```bash
+git clone <repository-url>
+cd "KCK Swap Shop/backend"
+```
+
+### 2. Create Virtual Environment
+
+**Windows:**
+```powershell
+python -m venv venv
+.\venv\Scripts\activate
+```
+
+**macOS/Linux:**
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
+### 3. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+**Note:** If you encounter bcrypt compatibility issues, install this specific version:
+```bash
+pip install bcrypt==4.0.1
+```
+
+### 4. Configure Environment
+
+Create a `.env` file in the backend directory:
+
+```env
+# Database Configuration
+USE_SQLITE=true
+SQLITE_DATABASE_URL=sqlite:///./kck_swap_shop.db
+DATABASE_URL=postgresql://user:password@localhost:5432/kck_swap_shop
+
+# JWT Settings
+SECRET_KEY=your-secret-key-here-change-in-production
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_DAYS=7
+
+# API Configuration
+API_V1_STR=/api/v1
+PROJECT_NAME=KCK Swap Shop API
+```
+
+**Development Note:** For development, keep `USE_SQLITE=true` to use the portable SQLite database.
+
+### 5. Initialize Database
+
+Seed the database with test accounts:
+
+```bash
+python seed_database.py
+```
+
+This creates:
+- **Admin User:** admin@example.com / admin123
+- **Regular Users:** john@example.com, jane@example.com / password123
+
+### 6. Start Development Server
+
+```bash
+python run_dev.py
+```
+
+The server will start at **http://localhost:8000**
+
+## API Documentation
+
+Once the server is running, access the interactive API documentation:
+
+- **Swagger UI:** http://localhost:8000/docs
+- **ReDoc:** http://localhost:8000/redoc
 
 ## Project Structure
 
@@ -8,150 +97,135 @@ A FastAPI application boilerplate with JWT authentication structure and PostgreS
 backend/
 ├── app/
 │   ├── __init__.py
-│   ├── main.py              # FastAPI app initialization
-│   ├── config.py            # App configuration
-│   ├── database.py          # Database session and engine
-│   ├── security.py          # JWT and password utilities
-│   ├── dependencies.py      # Auth dependencies
-│   ├── models/              # SQLAlchemy models
-│   │   ├── __init__.py
+│   ├── main.py              # FastAPI application entry point
+│   ├── database.py          # Database configuration
+│   ├── auth/
+│   │   ├── security.py      # JWT and password utilities
+│   │   └── dependencies.py  # Auth dependencies
+│   ├── core/
+│   │   └── config.py        # Application settings
+│   ├── models/
+│   │   ├── user.py          # SQLAlchemy models
+│   │   └── parish.py
+│   ├── schemas/
+│   │   ├── auth.py          # Pydantic schemas
 │   │   └── user.py
-│   ├── schemas/             # Pydantic schemas
-│   │   ├── __init__.py
-│   │   ├── user.py
-│   │   └── token.py
-│   └── routes/              # API routes
-│       ├── __init__.py
-│       ├── auth.py
-│       └── users.py
-├── .env.example
-├── .gitignore
-├── requirements.txt
-└── README.md
+│   └── routes/
+│       ├── auth.py          # Authentication endpoints
+│       └── users.py         # User management endpoints
+├── tests/                   # Unit tests (170+ tests)
+├── .env                     # Environment variables
+├── requirements.txt         # Python dependencies
+├── seed_database.py         # Database seeding script
+└── run_dev.py              # Development server runner
 ```
 
-## Setup Instructions
+## Running Tests
 
-### 1. Install Dependencies
+Run the test suite with pytest:
 
 ```bash
-cd backend
-pip install -r requirements.txt
+pytest
 ```
 
-### 2. Configure Environment Variables
-
-Copy `.env.example` to `.env` and update the values:
+Run with coverage report:
 
 ```bash
-copy .env.example .env
+pytest --cov=app --cov-report=html
 ```
 
-Update the following in `.env`:
-- `POSTGRES_*`: Your PostgreSQL connection details
-- `SECRET_KEY`: Generate with `openssl rand -hex 32`
-- `BACKEND_CORS_ORIGINS`: Your frontend URLs
+## Database Options
 
-### 3. Set Up PostgreSQL Database
+### SQLite (Development)
+- Portable, file-based database
+- Perfect for development and testing
+- No additional setup required
+- Set `USE_SQLITE=true` in `.env`
 
-Ensure PostgreSQL 16 is installed and create a database:
+### PostgreSQL (Production)
+- For production deployments
+- Install PostgreSQL 16
+- Update `DATABASE_URL` in `.env`
+- Set `USE_SQLITE=false`
 
-```sql
-CREATE DATABASE your_database_name;
-```
+## Test Accounts
 
-### 4. Run the Application
+After running `seed_database.py`:
 
+| Role    | Email               | Password    |
+|---------|---------------------|-------------|
+| Admin   | admin@example.com   | admin123    |
+| User    | john@example.com    | password123 |
+| User    | jane@example.com    | password123 |
+
+## Available Endpoints
+
+### Authentication
+- `POST /api/v1/auth/register` - Register new user
+- `POST /api/v1/auth/login` - Login and get access token
+- `POST /api/v1/auth/refresh` - Refresh access token
+
+### Users
+- `GET /api/v1/users/` - List all users (admin only)
+- `GET /api/v1/users/me` - Get current user
+- `PUT /api/v1/users/me` - Update current user
+- `DELETE /api/v1/users/me` - Delete current user
+
+## Troubleshooting
+
+### bcrypt Compatibility Issues
+If you see errors about bcrypt version detection:
 ```bash
-cd backend
-uvicorn app.main:app --reload
+pip install bcrypt==4.0.1
 ```
 
-The API will be available at `http://localhost:8000`
-
-## API Documentation
-
-Once running, access:
-- Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
-
-## Folder Structure
-
-### `/models` - Database Models
-Contains SQLAlchemy ORM models that define the database schema.
-- `user.py`: User model with authentication fields
-
-### `/schemas` - Pydantic Schemas
-Contains Pydantic models for request/response validation.
-- `user.py`: User-related schemas (UserCreate, UserUpdate, User, UserInDB)
-- `token.py`: JWT token schemas (Token, TokenPayload)
-
-### `/routes` - API Routes
-Contains FastAPI route handlers organized by resource.
-- `auth.py`: Authentication endpoints (register, login, refresh)
-- `users.py`: User management endpoints
-
-## Authentication Implementation
-
-The boilerplate includes the structure for JWT authentication but endpoints are not fully implemented. To complete the implementation:
-
-1. **Register Endpoint** (`routes/auth.py`):
-   - Validate user data
-   - Check if user already exists
-   - Hash password using `get_password_hash`
-   - Create user in database
-
-2. **Login Endpoint** (`routes/auth.py`):
-   - Validate credentials
-   - Verify password using `verify_password`
-   - Generate tokens using `create_access_token` and `create_refresh_token`
-
-3. **User Dependencies** (`dependencies.py`):
-   - Implement `get_current_user` to decode JWT and retrieve user
-
-## Database Migrations (Optional)
-
-To use Alembic for database migrations:
-
+### Database Already Seeded
+If `seed_database.py` reports users already exist, delete the database file:
 ```bash
-# Initialize Alembic
-alembic init alembic
-
-# Create migration
-alembic revision --autogenerate -m "Initial migration"
-
-# Apply migration
-alembic upgrade head
+rm kck_swap_shop.db  # Linux/macOS
+del kck_swap_shop.db  # Windows
 ```
+
+### Port Already in Use
+If port 8000 is busy, modify `run_dev.py` to use a different port:
+```python
+uvicorn.run("app.main:app", host="0.0.0.0", port=8001, reload=True)
+```
+
+## Development
+
+The development server runs with auto-reload enabled. Any changes to Python files will automatically restart the server.
+
+### Adding New Dependencies
+
+1. Install the package: `pip install package-name`
+2. Update requirements: `pip freeze > requirements.txt`
+
+## Security Notes
+
+⚠️ **Important for Production:**
+- Change `SECRET_KEY` to a strong random value
+- Set `USE_SQLITE=false` and use PostgreSQL
+- Enable HTTPS
+- Configure CORS properly in `main.py`
+- Use environment variables, never commit `.env` file
 
 ## Features
 
 - ✅ FastAPI application structure
 - ✅ JWT token utilities (access and refresh tokens)
 - ✅ Password hashing with bcrypt
-- ✅ SQLAlchemy models and database setup
-- ✅ Pydantic schemas for validation
-- ✅ CORS middleware
-- ✅ PostgreSQL connection
+- ✅ SQLAlchemy 2.0 models and database setup
+- ✅ Pydantic v2 schemas for validation
+- ✅ CORS middleware configured
+- ✅ SQLite/PostgreSQL support
 - ✅ API versioning (v1)
 - ✅ User model with timestamps
-- ✅ Organized folder structure (models, schemas, routes)
-- ⏳ Authentication endpoints (structure ready)
-- ⏳ Protected routes (structure ready)
+- ✅ Organized folder structure (models, schemas, routes, auth)
+- ✅ Comprehensive test suite (170+ tests)
+- ✅ Database seeding script
+- ⏳ Authentication endpoints (structure ready, needs implementation)
 
-## Next Steps
+## Support
 
-1. Implement the TODO items in:
-   - `routes/auth.py`
-   - `routes/users.py`
-   - `dependencies.py`
-
-2. Add CRUD operations for users in a service layer
-
-3. Set up database migrations with Alembic
-
-4. Add additional models and endpoints as needed
-
-5. Implement proper error handling and logging
-
-6. Add unit tests
+For issues or questions, please open an issue in the repository

@@ -2,18 +2,19 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.schemas.user import User, UserCreate, UserUpdate
-from backend.app.auth.dependencies import get_current_user, get_current_active_superuser
+from app.schemas.user import UserCreate, UserUpdate, UserOut
+from app.models.user import User as UserModel
+from app.auth.dependencies import require_admin, require_user
 
-router = APIRouter()
+router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.get("/", response_model=List[User])
+@router.get("/", response_model=List[UserOut])
 def get_users(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_superuser)
+    current_user: UserModel = Depends(require_admin)
 ):
     """
     Retrieve users (admin only)
@@ -25,19 +26,19 @@ def get_users(
     )
 
 
-@router.get("/me", response_model=User)
-def get_current_user_info(current_user: User = Depends(get_current_user)):
+@router.get("/me", response_model=UserOut)
+def get_current_user_info(current_user: UserModel = Depends(require_user)):
     """
     Get current user information
     """
     return current_user
 
 
-@router.get("/{user_id}", response_model=User)
+@router.get("/{user_id}", response_model=UserOut)
 def get_user(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: UserModel = Depends(require_user)
 ):
     """
     Get user by ID
@@ -49,11 +50,11 @@ def get_user(
     )
 
 
-@router.put("/me", response_model=User)
+@router.put("/me", response_model=UserOut)
 def update_current_user(
     user_update: UserUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: UserModel = Depends(require_user)
 ):
     """
     Update current user
@@ -65,11 +66,11 @@ def update_current_user(
     )
 
 
-@router.delete("/{user_id}", response_model=User)
+@router.delete("/{user_id}", response_model=UserOut)
 def delete_user(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_superuser)
+    current_user: UserModel = Depends(require_admin)
 ):
     """
     Delete user (admin only)
