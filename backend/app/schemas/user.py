@@ -16,11 +16,20 @@ class UserCreate(BaseModel):
 
 # Properties to receive via API on update
 class UserUpdate(BaseModel):
-    password: Optional[str] = None
+    email: Optional[EmailStr] = None
+    username: Optional[str] = None
+    phone: Optional[str] = None
+    parish: Optional[Parish] = None
+    admin: Optional[bool] = None
 
+    
 class UserOut(BaseModel):
     id: int
-    created_at: datetime
+    email: EmailStr
+    name: str
+    phone: str
+    parish: Parish
+    admin: bool
 
     class Config:
         from_attributes = True
