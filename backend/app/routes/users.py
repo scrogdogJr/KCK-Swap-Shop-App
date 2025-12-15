@@ -151,7 +151,6 @@ def update_current_user(
 
 @router.delete(
     "/{user_id}", 
-    response_model=UserOut,
     summary="Delete user (admin only)",
     description="""
     Delete a user by their ID. This endpoint is restricted to admin users only.
